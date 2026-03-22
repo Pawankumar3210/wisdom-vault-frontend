@@ -19,7 +19,7 @@ export const contentAPI = {
   getByType: async (type) => {
     const { data, error } = await supabase
       .from('content')
-      .select('*, subject(name)') // join to subject table to get subject name
+      .select('*, subject(name)')
       .eq('type', type)
       .order('created_at', { ascending: false })
     if (error) throw error
@@ -27,17 +27,15 @@ export const contentAPI = {
   },
 
   create: async (formData) => {
-    // Upload PDF to Supabase storage first
     const file = formData.get('file')
     const fileName = `${Date.now()}_${file.name}`
 
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('pdfs') // your storage bucket
+      .from('pdfs')
       .upload(fileName, file)
 
     if (uploadError) throw uploadError
 
-    // Insert record in content table
     const { data, error } = await supabase.from('content').insert([
       {
         title: formData.get('title'),
@@ -77,4 +75,30 @@ export const contentAPI = {
     if (error) throw error
     return { data }
   },
+}
+
+// ========================
+// Stats API
+// ========================
+export const statsAPI = async () => {
+  try {
+    const [{ count: totalSubjects }, { count: totalNotes }, { count: totalQuestionBanks }, { count: totalPapers }] = await Promise.all([
+      supabase.from('subjects').select('*', { count: 'exact' }),
+      supabase.from('content').select('*', { count: 'exact' }).eq('type', 'note'),
+      supabase.from('content').select('*', { count: 'exact' }).eq('type', 'question_bank'),
+      supabase.from('content').select('*', { count: 'exact' }).eq('type', 'question_paper'),
+    ])
+
+    return {
+      data: {
+        totalSubjects,
+        totalNotes,
+        totalQuestionBanks,
+        totalPapers,
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    throw error
+  }
 }

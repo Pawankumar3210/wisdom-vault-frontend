@@ -6,7 +6,7 @@ import Header from '../../components/ui/Header'
 import ParticleBackground from '../../components/ui/ParticleBackground'
 import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import { BookOpen, FileText, ClipboardList, Award } from 'lucide-react'
-import { statsAPI } from '../../services/api'
+import { statsAPI } from '../../services/api' // ✅ named import
 
 const AdminDashboard = ({ onLogout }) => {
   const navigate = useNavigate()
@@ -25,8 +25,14 @@ const AdminDashboard = ({ onLogout }) => {
   const fetchStats = async () => {
     try {
       setIsLoading(true)
-      const response = await statsAPI.getStats()
-      setStats(response.data.data)
+      // Correct usage for named export
+      const response = await statsAPI() // ✅ call directly
+      setStats(response.data || {
+        totalNotes: 0,
+        totalQuestionBanks: 0,
+        totalPapers: 0,
+        totalSubjects: 0,
+      })
     } catch (error) {
       console.error('Error fetching stats:', error)
       toast.error('Failed to load statistics')
