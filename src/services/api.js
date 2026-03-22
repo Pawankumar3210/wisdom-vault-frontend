@@ -1,40 +1,80 @@
-import axios from 'axios'
+// src/services/api.js
+import { supabase } from './supabaseClient'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-})
-
-// Content endpoints
-export const contentAPI = {
-  search: (query) => apiClient.get('/search', { params: { q: query } }),
-  getAll: () => apiClient.get('/content'),
-  getById: (id) => apiClient.get(`/content/${id}`),
-  getByType: (type) => apiClient.get(`/content/type/${type}`),
-  create: (data) => apiClient.post('/content', data),
-  update: (id, data) => apiClient.put(`/content/${id}`, data),
-  delete: (id) => apiClient.delete(`/content/${id}`),
-  downloadUrl: (id) => `${API_BASE_URL}/content/${id}/download`,
-}
-
-// Subject endpoints
+// ========================
+// Subject API
+// ========================
 export const subjectAPI = {
-  getAll: () => apiClient.get('/subjects'),
-  getById: (id) => apiClient.get(`/subjects/${id}`),
-  create: (data) => apiClient.post('/subjects', data),
-  update: (id, data) => apiClient.put(`/subjects/${id}`, data),
-  delete: (id) => apiClient.delete(`/subjects/${id}`),
+  getAll: async () => {
+    const { data, error } = await supabase.from('subjects').select('*')
+    if (error) throw error
+    return { data }
+  }
 }
 
-// Stats endpoints
-export const statsAPI = {
-  getStats: () => apiClient.get('/stats'),
-}
+// ========================
+// Content API (notes, etc.)
+// ========================
+export const contentAPI = {
+  getByType: async (type) => {
+    const { data, error } = await supabase
+      .from('content')
+      .select('*, subject(name)') // join to subject table to get subject name
+      .eq('type', type)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return { data }
+  },
 
-// Admin endpoints
-export const adminAPI = {
-  login: (credentials) => apiClient.post('/admin/login', credentials),
-}
+  create: async (formData) => {
+    // Upload PDF to Supabase storage first
+    const file = formData.get('file')
+    const fileName = `${Date.now()}_${file.name}`
 
-export default apiClient
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('pdfs') // your storage bucket
+      .upload(fileName, file)
+
+    if (uploadError) throw uploadError
+
+    // Insert record in content table
+    const { data, error } = await supabase.from('content').insert([
+      {
+        title: formData.get('title'),
+        subject_id: formData.get('subject_id'),
+        type: formData.get('type'),
+        file_url: uploadData.path,
+      },
+    ])
+    if (error) throw error
+    return { data }
+  },
+
+  update: async (id, formData) => {
+    const updates = {
+      title: formData.get('title'),
+      subject_id: formData.get('subject_id'),
+    }
+
+    const file = formData.get('file')
+    if (file) {
+      const fileName = `${Date.now()}_${file.name}`
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(fileName, file)
+
+      if (uploadError) throw uploadError
+      updates.file_url = uploadData.path
+    }
+
+    const { data, error } = await supabase.from('content').update(updates).eq('id', id)
+    if (error) throw error
+    return { data }
+  },
+
+  delete: async (id) => {
+    const { data, error } = await supabase.from('content').delete().eq('id', id)
+    if (error) throw error
+    return { data }
+  },
+}

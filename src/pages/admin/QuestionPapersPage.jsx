@@ -6,7 +6,7 @@ import ParticleBackground from '../../components/ui/ParticleBackground'
 import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import { Plus, Edit2, Trash2, ArrowLeft, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import {supabase} from '../../services/supabaseClient'
+import supabase from '../../services/supabaseClient' // ✅ corrected import
 
 const QuestionPapersPage = ({ onLogout }) => {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ const QuestionPapersPage = ({ onLogout }) => {
       // Fetch question papers
       const { data: papersData, error: papersError } = await supabase
         .from('content')
-        .select('*, subjects(name)') // get subject name via foreign key
+        .select('*, subjects(name)')
         .eq('type', 'paper')
       if (papersError) throw papersError
 

@@ -7,7 +7,7 @@ import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 import { Plus, Edit2, Trash2, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import  {supabase}  from '../../services/supabaseClient'
+import supabase from '../../services/supabaseClient' // ✅ default import
 
 const SubjectsPage = ({ onLogout }) => {
   const navigate = useNavigate()
@@ -50,7 +50,6 @@ const SubjectsPage = ({ onLogout }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!formData.name.trim() || !formData.code.trim()) {
       toast.error('Please fill in all fields')
       return
@@ -66,7 +65,7 @@ const SubjectsPage = ({ onLogout }) => {
         if (error) throw error
         toast.success('Subject updated successfully')
       } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('subjects')
           .insert([{ name: formData.name, code: formData.code }])
         if (error) throw error
