@@ -7,7 +7,7 @@ import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 import { Plus, Edit2, Trash2, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { subjectAPI } from '../../services/api'
+import  supabase  from '../../services/supabaseClient'
 
 const SubjectsPage = ({ onLogout }) => {
   const navigate = useNavigate()
@@ -25,8 +25,9 @@ const SubjectsPage = ({ onLogout }) => {
   const fetchSubjects = async () => {
     try {
       setIsLoading(true)
-      const response = await subjectAPI.getAll()
-      setSubjects(response.data.data || [])
+      const { data, error } = await supabase.from('subjects').select('*')
+      if (error) throw error
+      setSubjects(data)
     } catch (error) {
       console.error('Error fetching subjects:', error)
       toast.error('Failed to load subjects')
@@ -58,10 +59,17 @@ const SubjectsPage = ({ onLogout }) => {
     setIsSubmitting(true)
     try {
       if (editingId) {
-        await subjectAPI.update(editingId, formData)
+        const { error } = await supabase
+          .from('subjects')
+          .update({ name: formData.name, code: formData.code })
+          .eq('id', editingId)
+        if (error) throw error
         toast.success('Subject updated successfully')
       } else {
-        await subjectAPI.create(formData)
+        const { data, error } = await supabase
+          .from('subjects')
+          .insert([{ name: formData.name, code: formData.code }])
+        if (error) throw error
         toast.success('Subject added successfully')
       }
       setShowAddForm(false)
@@ -79,7 +87,8 @@ const SubjectsPage = ({ onLogout }) => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this subject?')) {
       try {
-        await subjectAPI.delete(id)
+        const { error } = await supabase.from('subjects').delete().eq('id', id)
+        if (error) throw error
         toast.success('Subject deleted successfully')
         await fetchSubjects()
       } catch (error) {

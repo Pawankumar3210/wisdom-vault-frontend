@@ -1,3 +1,4 @@
+import supabase from '../../services/supabaseClient'
 import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -24,6 +25,7 @@ const NotesPage = ({ onLogout }) => {
     file: null,
   })
 
+  // Fetch notes and subjects
   useEffect(() => {
     fetchData()
   }, [])
@@ -45,6 +47,7 @@ const NotesPage = ({ onLogout }) => {
     }
   }
 
+  // Drag & drop handlers
   const handleDrag = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -76,9 +79,9 @@ const NotesPage = ({ onLogout }) => {
     }
   }
 
+  // Add or update note
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!formData.title.trim() || !formData.subject_id || !formData.file) {
       toast.error('Please fill in all fields')
       return
@@ -100,10 +103,7 @@ const NotesPage = ({ onLogout }) => {
         toast.success('Note added successfully')
       }
 
-      setShowAddForm(false)
-      setFormData({ title: '', subject_id: '', file: null })
-      setEditingId(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      resetForm()
       await fetchData()
     } catch (error) {
       console.error('Error saving note:', error)
@@ -128,12 +128,15 @@ const NotesPage = ({ onLogout }) => {
 
   const handleEditClick = (content) => {
     setEditingId(content.id)
-    setFormData({
-      title: content.title,
-      subject_id: content.subject_id,
-      file: null,
-    })
+    setFormData({ title: content.title, subject_id: content.subject_id, file: null })
     setShowAddForm(true)
+  }
+
+  const resetForm = () => {
+    setShowAddForm(false)
+    setEditingId(null)
+    setFormData({ title: '', subject_id: '', file: null })
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   return (
@@ -162,12 +165,8 @@ const NotesPage = ({ onLogout }) => {
               </div>
             </div>
             <button
-              onClick={() => {
-                setShowAddForm(!showAddForm)
-                setEditingId(null)
-                setFormData({ title: '', subject_id: '', file: null })
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 hover:from-cyan-500/50 hover:to-blue-500/50 border border-cyan-500/50 hover:border-cyan-400/80 text-cyan-300 rounded-lg font-sci-fi transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,217,255,0.4)]"
+              onClick={() => setShowAddForm(!showAddForm) || resetForm()}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 hover:from-cyan-500/50 hover:to-blue-500/50 border border-cyan-500/50 text-cyan-300 rounded-lg font-sci-fi transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,217,255,0.4)]"
             >
               <Plus className="w-5 h-5" />
               Add Note
@@ -210,7 +209,7 @@ const NotesPage = ({ onLogout }) => {
                   </div>
                 </div>
 
-                {/* Drag & Drop File Upload */}
+                {/* Drag & Drop */}
                 <div
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
@@ -249,24 +248,16 @@ const NotesPage = ({ onLogout }) => {
                     disabled={isSubmitting}
                     className="px-6 py-2 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 hover:from-cyan-500/50 hover:to-blue-500/50 border border-cyan-500/50 text-cyan-300 rounded-lg font-sci-fi transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
-                        Uploading...
-                      </>
-                    ) : editingId ? (
-                      'Update Note'
-                    ) : (
-                      'Upload Note'
-                    )}
+                    {isSubmitting
+                      ? <>
+                          <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+                          Uploading...
+                        </>
+                      : editingId ? 'Update Note' : 'Upload Note'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowAddForm(false)
-                      setEditingId(null)
-                      setFormData({ title: '', subject_id: '', file: null })
-                    }}
+                    onClick={resetForm}
                     className="px-6 py-2 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600 text-slate-300 rounded-lg font-sci-fi transition-all"
                   >
                     Cancel

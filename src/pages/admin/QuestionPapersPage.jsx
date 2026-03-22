@@ -6,12 +6,12 @@ import ParticleBackground from '../../components/ui/ParticleBackground'
 import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import { Plus, Edit2, Trash2, ArrowLeft, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { contentAPI, subjectAPI } from '../../services/api'
+import supabase from '../../services/supabaseClient'
 
 const QuestionPapersPage = ({ onLogout }) => {
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
-  const [contents, setContents] = useState([])
+  const [papers, setPapers] = useState([])
   const [subjects, setSubjects] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -31,12 +31,26 @@ const QuestionPapersPage = ({ onLogout }) => {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const [contentsRes, subjectsRes] = await Promise.all([
-        contentAPI.getByType('paper'),
-        subjectAPI.getAll(),
-      ])
-      setContents(contentsRes.data.data || [])
-      setSubjects(subjectsRes.data.data || [])
+      // Fetch subjects
+      const { data: subjectsData, error: subjectsError } = await supabase
+        .from('subjects')
+        .select('*')
+      if (subjectsError) throw subjectsError
+      setSubjects(subjectsData || [])
+
+      // Fetch question papers
+      const { data: papersData, error: papersError } = await supabase
+        .from('content')
+        .select('*, subjects(name)') // get subject name via foreign key
+        .eq('type', 'paper')
+      if (papersError) throw papersError
+
+      setPapers(
+        (papersData || []).map((p) => ({
+          ...p,
+          subject: p.subjects?.name || 'Unknown',
+        }))
+      )
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to load data')
@@ -86,17 +100,41 @@ const QuestionPapersPage = ({ onLogout }) => {
 
     setIsSubmitting(true)
     try {
-      const formDataToSend = new FormData()
-      formDataToSend.append('title', formData.title)
-      formDataToSend.append('subject_id', formData.subject_id)
-      formDataToSend.append('type', 'paper')
-      formDataToSend.append('file', formData.file)
+      let fileUrl = null
+
+      // Upload PDF to Supabase Storage
+      const fileName = `${Date.now()}_${formData.file.name}`
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('question-papers')
+        .upload(fileName, formData.file)
+      if (uploadError) throw uploadError
+      fileUrl = supabase.storage.from('question-papers').getPublicUrl(fileName).data.publicUrl
 
       if (editingId) {
-        await contentAPI.update(editingId, formDataToSend)
+        // Update record
+        const { error: updateError } = await supabase
+          .from('content')
+          .update({
+            title: formData.title,
+            subject_id: formData.subject_id,
+            file_url: fileUrl,
+          })
+          .eq('id', editingId)
+        if (updateError) throw updateError
         toast.success('Question paper updated successfully')
       } else {
-        await contentAPI.create(formDataToSend)
+        // Create new record
+        const { error: insertError } = await supabase
+          .from('content')
+          .insert([
+            {
+              title: formData.title,
+              subject_id: formData.subject_id,
+              type: 'paper',
+              file_url: fileUrl,
+            },
+          ])
+        if (insertError) throw insertError
         toast.success('Question paper added successfully')
       }
 
@@ -113,10 +151,17 @@ const QuestionPapersPage = ({ onLogout }) => {
     }
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, fileUrl) => {
     if (window.confirm('Are you sure you want to delete this question paper?')) {
       try {
-        await contentAPI.delete(id)
+        // Delete file from storage
+        if (fileUrl) {
+          const path = fileUrl.split('/storage/v1/object/public/question-papers/')[1]
+          await supabase.storage.from('question-papers').remove([path])
+        }
+        // Delete record
+        const { error } = await supabase.from('content').delete().eq('id', id)
+        if (error) throw error
         toast.success('Question paper deleted successfully')
         await fetchData()
       } catch (error) {
@@ -126,11 +171,11 @@ const QuestionPapersPage = ({ onLogout }) => {
     }
   }
 
-  const handleEditClick = (content) => {
-    setEditingId(content.id)
+  const handleEditClick = (paper) => {
+    setEditingId(paper.id)
     setFormData({
-      title: content.title,
-      subject_id: content.subject_id,
+      title: paper.title,
+      subject_id: paper.subject_id,
       file: null,
     })
     setShowAddForm(true)
@@ -217,9 +262,7 @@ const QuestionPapersPage = ({ onLogout }) => {
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
                   className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                    isDragActive
-                      ? 'border-cyan-400 bg-cyan-500/10'
-                      : 'border-cyan-500/30 hover:border-cyan-500/60 bg-slate-900/30'
+                    isDragActive ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/30 hover:border-cyan-500/60 bg-slate-900/30'
                   }`}
                 >
                   <input
@@ -238,9 +281,7 @@ const QuestionPapersPage = ({ onLogout }) => {
                     <Upload className="w-5 h-5" />
                     <span className="font-sci-fi">Drag and drop or click to upload</span>
                   </button>
-                  {formData.file && (
-                    <p className="text-sm text-cyan-300 mt-2">✓ {formData.file.name}</p>
-                  )}
+                  {formData.file && <p className="text-sm text-cyan-300 mt-2">✓ {formData.file.name}</p>}
                 </div>
 
                 <div className="flex gap-3">
@@ -281,7 +322,7 @@ const QuestionPapersPage = ({ onLogout }) => {
             <div className="flex justify-center items-center py-20">
               <FuturisticLoader />
             </div>
-          ) : contents.length === 0 ? (
+          ) : papers.length === 0 ? (
             <motion.div
               className="text-center py-20 bg-slate-800/50 border border-cyan-500/20 rounded-lg"
               initial={{ opacity: 0 }}
@@ -299,36 +340,36 @@ const QuestionPapersPage = ({ onLogout }) => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-cyan-500/20 bg-slate-900/30">
-                      <th className="px-6 py-4 text-left text-cyan-400 font-sci-fi text-sm">Question Paper Title</th>
+                      <th className="px-6 py-4 text-left text-cyan-400 font-sci-fi text-sm">Title</th>
                       <th className="px-6 py-4 text-left text-cyan-400 font-sci-fi text-sm">Subject</th>
                       <th className="px-6 py-4 text-left text-cyan-400 font-sci-fi text-sm">Uploaded</th>
                       <th className="px-6 py-4 text-center text-cyan-400 font-sci-fi text-sm">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {contents.map((content, index) => (
+                    {papers.map((paper, index) => (
                       <motion.tr
-                        key={content.id}
+                        key={paper.id}
                         className="border-b border-cyan-500/10 hover:bg-slate-800/50 transition-colors"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.05 }}
                       >
-                        <td className="px-6 py-4 text-slate-300 font-sci-fi">{content.title}</td>
-                        <td className="px-6 py-4 text-slate-400 font-sci-fi text-sm">{content.subject}</td>
+                        <td className="px-6 py-4 text-slate-300 font-sci-fi">{paper.title}</td>
+                        <td className="px-6 py-4 text-slate-400 font-sci-fi text-sm">{paper.subject}</td>
                         <td className="px-6 py-4 text-slate-400 font-sci-fi text-sm">
-                          {new Date(content.created_at).toLocaleDateString()}
+                          {new Date(paper.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 flex justify-center gap-2">
                           <button
-                            onClick={() => handleEditClick(content)}
+                            onClick={() => handleEditClick(paper)}
                             className="p-2 hover:bg-blue-500/10 rounded transition-colors text-blue-400"
                             title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(content.id)}
+                            onClick={() => handleDelete(paper.id, paper.file_url)}
                             className="p-2 hover:bg-red-500/10 rounded transition-colors text-red-400"
                             title="Delete"
                           >
