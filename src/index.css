@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Glassmorphism effect */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Neon colors */
+.text-neon-blue {
+  color: #00ffff;
+}
+
+.text-neon-purple {
+  color: #bb00ff;
+}
+
+/* Default dark background so the page looks correct */
+body {
+  @apply bg-gray-900;
+}
