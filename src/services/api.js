@@ -1,121 +1,120 @@
-// src/services/api.js
-import { supabase } from './supabaseClient'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import Header from '../../components/ui/Header'
+import ParticleBackground from '../../components/ui/ParticleBackground'
+import FuturisticLoader from '../../components/ui/FuturisticLoader'
+import { BookOpen, FileText, ClipboardList, Award } from 'lucide-react'
+import { statsAPI } from '../../services/api'
 
-// ========================
-// Subject API
-// ========================
-export const subjectAPI = {
-  getAll: async () => {
-    const { data, error } = await supabase.from('subjects').select('*')
-    if (error) throw error
-    return { data }
-  }
-}
+const AdminDashboard = ({ onLogout }) => {
+  const navigate = useNavigate()
 
-// ========================
-// Content API
-// ========================
-export const contentAPI = {
-  getByType: async (type) => {
-    const { data, error } = await supabase
-      .from('content')
-      .select('*, subject(name)')
-      .eq('type', type)
-      .order('created_at', { ascending: false })
+  const [stats, setStats] = useState({
+    totalNotes: 0,
+    totalQuestionBanks: 0,
+    totalPapers: 0,
+    totalSubjects: 0,
+  })
 
-    if (error) throw error
-    return { data }
-  },
+  const [isLoading, setIsLoading] = useState(true)
 
-  create: async (formData) => {
-    const file = formData.get('file')
-    const fileName = `${Date.now()}_${file.name}`
+  useEffect(() => {
+    fetchStats()
+  }, [])
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('pdfs')
-      .upload(fileName, file)
-
-    if (uploadError) throw uploadError
-
-    const { data, error } = await supabase.from('content').insert([
-      {
-        title: formData.get('title'),
-        subject_id: formData.get('subject_id'),
-        type: formData.get('type'),
-        file_url: uploadData.path,
-      },
-    ])
-
-    if (error) throw error
-    return { data }
-  },
-
-  update: async (id, formData) => {
-    const updates = {
-      title: formData.get('title'),
-      subject_id: formData.get('subject_id'),
-    }
-
-    const file = formData.get('file')
-    if (file) {
-      const fileName = `${Date.now()}_${file.name}`
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('pdfs')
-        .upload(fileName, file)
-
-      if (uploadError) throw uploadError
-      updates.file_url = uploadData.path
-    }
-
-    const { data, error } = await supabase
-      .from('content')
-      .update(updates)
-      .eq('id', id)
-
-    if (error) throw error
-    return { data }
-  },
-
-  delete: async (id) => {
-    const { data, error } = await supabase
-      .from('content')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-    return { data }
-  },
-}
-// ========================
-// ✅ FINAL Stats API (CLEAN)
-// ========================
-export const statsAPI = {
-  getStats: async () => {
+  const fetchStats = async () => {
     try {
-      const [
-        { count: totalSubjects },
-        { count: totalNotes },
-        { count: totalQuestionBanks },
-        { count: totalPapers },
-      ] = await Promise.all([
-        supabase.from('subjects').select('*', { count: 'exact', head: true }),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'note'),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'qb'),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'qp'),
-      ])
+      setIsLoading(true)
 
-      return {
-        data: {
-          totalSubjects: totalSubjects || 0,
-          totalNotes: totalNotes || 0,
-          totalQuestionBanks: totalQuestionBanks || 0,
-          totalPapers: totalPapers || 0,
-        }
-      }
+      // ✅ CORRECT CALL
+      const response = await statsAPI()
+
+      // ✅ CORRECT DATA ACCESS
+      setStats(response.data)
+
     } catch (error) {
       console.error('Error fetching stats:', error)
-      throw error
+      toast.error('Failed to load statistics')
+    } finally {
+      setIsLoading(false)
     }
   }
+
+  const statCards = [
+    {
+      title: 'Total Subjects',
+      value: stats.totalSubjects,
+      icon: BookOpen,
+      color: 'from-cyan-500/20 to-blue-500/20',
+      borderColor: 'border-cyan-500/30',
+      path: '/admin/subjects',
+    },
+    {
+      title: 'Total Notes',
+      value: stats.totalNotes,
+      icon: FileText,
+      color: 'from-blue-500/20 to-purple-500/20',
+      borderColor: 'border-blue-500/30',
+      path: '/admin/notes',
+    },
+    {
+      title: 'Question Banks',
+      value: stats.totalQuestionBanks,
+      icon: ClipboardList,
+      color: 'from-purple-500/20 to-pink-500/20',
+      borderColor: 'border-purple-500/30',
+      path: '/admin/question-banks',
+    },
+    {
+      title: 'Question Papers',
+      value: stats.totalPapers,
+      icon: Award,
+      color: 'from-pink-500/20 to-red-500/20',
+      borderColor: 'border-pink-500/30',
+      path: '/admin/question-papers',
+    },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <ParticleBackground />
+      <Header isAdminLoggedIn={true} onLogout={onLogout} />
+
+      <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+
+          <h1 className="text-4xl font-bold text-cyan-400 mb-8">
+            Admin Dashboard
+          </h1>
+
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <FuturisticLoader />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {statCards.map((card, index) => {
+                const Icon = card.icon
+                return (
+                  <button
+                    key={index}
+                    onClick={() => navigate(card.path)}
+                    className={`p-6 rounded-lg border ${card.borderColor} bg-slate-800 hover:scale-105 transition`}
+                  >
+                    <Icon className="mb-4 text-cyan-400" />
+                    <p className="text-slate-400">{card.title}</p>
+                    <h3 className="text-3xl text-white">{card.value}</h3>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
+
+export default AdminDashboard
