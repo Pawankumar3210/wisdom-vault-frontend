@@ -8,4 +8,4 @@ export const supabase = createClient(
 )
 
 // Default export for compatibility with current imports
-export default supabase
+export default {supabase}

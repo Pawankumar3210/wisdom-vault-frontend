@@ -87,9 +87,8 @@ export const contentAPI = {
     return { data }
   },
 }
-
 // ========================
-// ✅ FIXED Stats API
+// ✅ FINAL Stats API (CLEAN)
 // ========================
 export const statsAPI = {
   getStats: async () => {
@@ -108,12 +107,10 @@ export const statsAPI = {
 
       return {
         data: {
-          data: {
-            totalSubjects: totalSubjects || 0,
-            totalNotes: totalNotes || 0,
-            totalQuestionBanks: totalQuestionBanks || 0,
-            totalPapers: totalPapers || 0,
-          }
+          totalSubjects: totalSubjects || 0,
+          totalNotes: totalNotes || 0,
+          totalQuestionBanks: totalQuestionBanks || 0,
+          totalPapers: totalPapers || 0,
         }
       }
     } catch (error) {
