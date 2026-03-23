@@ -6,7 +6,7 @@ import ParticleBackground from '../../components/ui/ParticleBackground'
 import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import { Plus, Edit2, Trash2, ArrowLeft, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import {supabase} from '../../services/supabaseClient' // ✅ corrected import
+import supabase from '../../services/supabaseClient' // ✅ corrected import
 
 const QuestionPapersPage = ({ onLogout }) => {
   const navigate = useNavigate()

@@ -7,7 +7,7 @@ import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 import { Plus, Edit2, Trash2, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import {supabase} from '../../services/supabaseClient' // ✅ default import
+import supabase from '../../services/supabaseClient' // ✅ default import
 
 const SubjectsPage = ({ onLogout }) => {
   const navigate = useNavigate()

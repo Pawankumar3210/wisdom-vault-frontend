@@ -13,7 +13,7 @@ export const subjectAPI = {
 }
 
 // ========================
-// Content API (notes, etc.)
+// Content API
 // ========================
 export const contentAPI = {
   getByType: async (type) => {
@@ -22,6 +22,7 @@ export const contentAPI = {
       .select('*, subject(name)')
       .eq('type', type)
       .order('created_at', { ascending: false })
+
     if (error) throw error
     return { data }
   },
@@ -44,6 +45,7 @@ export const contentAPI = {
         file_url: uploadData.path,
       },
     ])
+
     if (error) throw error
     return { data }
   },
@@ -57,6 +59,7 @@ export const contentAPI = {
     const file = formData.get('file')
     if (file) {
       const fileName = `${Date.now()}_${file.name}`
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('pdfs')
         .upload(fileName, file)
@@ -65,40 +68,57 @@ export const contentAPI = {
       updates.file_url = uploadData.path
     }
 
-    const { data, error } = await supabase.from('content').update(updates).eq('id', id)
+    const { data, error } = await supabase
+      .from('content')
+      .update(updates)
+      .eq('id', id)
+
     if (error) throw error
     return { data }
   },
 
   delete: async (id) => {
-    const { data, error } = await supabase.from('content').delete().eq('id', id)
+    const { data, error } = await supabase
+      .from('content')
+      .delete()
+      .eq('id', id)
+
     if (error) throw error
     return { data }
   },
 }
 
 // ========================
-// Stats API
+// ✅ FIXED Stats API
 // ========================
-export const statsAPI = async () => {
-  try {
-    const [{ count: totalSubjects }, { count: totalNotes }, { count: totalQuestionBanks }, { count: totalPapers }] = await Promise.all([
-      supabase.from('subjects').select('*', { count: 'exact' }),
-      supabase.from('content').select('*', { count: 'exact' }).eq('type', 'note'),
-      supabase.from('content').select('*', { count: 'exact' }).eq('type', 'question_bank'),
-      supabase.from('content').select('*', { count: 'exact' }).eq('type', 'question_paper'),
-    ])
+export const statsAPI = {
+  getStats: async () => {
+    try {
+      const [
+        { count: totalSubjects },
+        { count: totalNotes },
+        { count: totalQuestionBanks },
+        { count: totalPapers },
+      ] = await Promise.all([
+        supabase.from('subjects').select('*', { count: 'exact', head: true }),
+        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'note'),
+        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'qb'),
+        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'qp'),
+      ])
 
-    return {
-      data: {
-        totalSubjects,
-        totalNotes,
-        totalQuestionBanks,
-        totalPapers,
-      },
+      return {
+        data: {
+          data: {
+            totalSubjects: totalSubjects || 0,
+            totalNotes: totalNotes || 0,
+            totalQuestionBanks: totalQuestionBanks || 0,
+            totalPapers: totalPapers || 0,
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      throw error
     }
-  } catch (error) {
-    console.error('Error fetching stats:', error)
-    throw error
   }
 }
