@@ -20,11 +20,22 @@ const HomePage = ({ isAdminLoggedIn, onLogout }) => {
   const fetchContents = async () => {
     try {
       setIsLoading(true)
+      console.log('🔍 HomePage: Starting fetchContents...')
+      
       const response = await contentAPI.getAll()
-      console.log('✅ Contents loaded:', response.data)
-      setContents(response.data || [])
+      
+      console.log('🔍 HomePage: Response received:', response)
+      console.log('🔍 HomePage: response.data:', response.data)
+      console.log('🔍 HomePage: response.data type:', typeof response.data)
+      console.log('🔍 HomePage: response.data is array?:', Array.isArray(response.data))
+      
+      const contents = response.data || []
+      console.log('✅ HomePage: Setting contents. Count:', contents.length)
+      setContents(contents)
     } catch (error) {
-      console.error('❌ Error fetching contents:', error)
+      console.error('❌ HomePage: Error fetching contents:', error)
+      console.error('❌ HomePage: Error message:', error.message)
+      console.error('❌ HomePage: Error details:', error)
       toast.error(error.message || 'Failed to load contents')
     } finally {
       setIsLoading(false)

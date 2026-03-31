@@ -18,19 +18,29 @@ export const subjectAPI = {
 export const contentAPI = {
   getAll: async () => {
     try {
+      console.log('📍 Starting getAll() call...')
+      console.log('📍 Supabase instance:', supabase ? 'exists' : 'MISSING')
+      
       const { data, error } = await supabase
         .from('content')
         .select('*')
         .order('created_at', { ascending: false })
 
+      console.log('📍 Raw response - data:', data)
+      console.log('📍 Raw response - error:', error)
+
       if (error) {
         console.error('❌ Get all content error:', error)
         throw new Error(`Failed to fetch all content: ${error.message}`)
       }
-      console.log('✅ Fetched all content:', data)
+      
+      console.log('✅ Fetched all content. Count:', data?.length || 0)
+      console.log('✅ Full data:', JSON.stringify(data, null, 2))
+      
       return { data }
     } catch (err) {
       console.error('❌ Error in getAll:', err)
+      console.error('❌ Error stack:', err.stack)
       throw err
     }
   },
