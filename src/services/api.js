@@ -157,6 +157,45 @@ export const contentAPI = {
     return { data }
   },
 
+  // Special method for react-pdf to handle CORS issues
+  getPdfForViewer: async (fileName, contentType = 'note') => {
+    if (!fileName) {
+      console.error('❌ getPdfForViewer: fileName is empty!')
+      throw new Error('No file name provided')
+    }
+    
+    try {
+      // Determine bucket based on content type
+      let bucketName = 'pdfs'
+      if (contentType === 'qb' || contentType === 'question_bank') {
+        bucketName = 'question_banks'
+      } else if (contentType === 'paper' || contentType === 'question_paper') {
+        bucketName = 'question-papers'
+      }
+      
+      console.log('📖 getPdfForViewer - fetching from bucket:', bucketName, 'file:', fileName)
+      
+      // Download file as blob
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .download(fileName)
+      
+      if (error) {
+        console.error('❌ Download error:', error)
+        throw error
+      }
+      
+      // Create blob URL for react-pdf
+      const blobUrl = URL.createObjectURL(data)
+      console.log('✅ Created blob URL:', blobUrl)
+      
+      return blobUrl
+    } catch (err) {
+      console.error('❌ Error in getPdfForViewer:', err)
+      throw err
+    }
+  },
+
   downloadUrl: (fileName, contentType = 'note') => {
     if (!fileName) {
       console.error('❌ downloadUrl: fileName is empty!')
