@@ -36,8 +36,8 @@ const NotesPage = ({ onLogout }) => {
         contentAPI.getByType('note'),
         subjectAPI.getAll(),
       ])
-      setContents(contentsRes.data.data || [])
-      setSubjects(subjectsRes.data.data || [])
+      setContents(contentsRes.data || [])
+      setSubjects(subjectsRes.data || [])
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to load data')
