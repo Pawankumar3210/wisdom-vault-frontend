@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { ChevronLeft, ChevronRight, Download, Home } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -16,6 +16,13 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
 
   console.log('🔍 PDFViewer received fileUrl:', fileUrl)
   console.log('🔍 PDFViewer received fileName:', fileName)
+  
+  useEffect(() => {
+    console.log('🔍 PDFViewer useEffect - fileUrl changed:', fileUrl)
+    if (!fileUrl) {
+      console.error('❌ PDFViewer: fileUrl is empty!')
+    }
+  }, [fileUrl])
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages)
@@ -35,9 +42,18 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
     onDownload()
   }
 
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    console.log('✅ PDF Document loaded successfully! Pages:', numPages)
+    setNumPages(numPages)
+    setIsLoading(false)
+  }
+
   const onDocumentError = (error) => {
     console.error('❌ PDF Document Error:', error)
-    toast.error(`Failed to load PDF: ${error.message}`)
+    console.error('❌ Error name:', error?.name)
+    console.error('❌ Error message:', error?.message)
+    console.error('❌ Error details:', JSON.stringify(error, null, 2))
+    toast.error(`Failed to load PDF: ${error?.message || 'Unknown error'}`)
   }
 
   return (

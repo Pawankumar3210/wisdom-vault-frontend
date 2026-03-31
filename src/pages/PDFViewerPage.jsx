@@ -30,24 +30,53 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
   }
 
   const handleDownload = () => {
+    console.log('🔴 START: Download button handler called')
+    
     if (!content || !content.file_url) {
+      console.error('❌ Download failed: No content or file_url')
       toast.error('File URL not available')
       return
     }
+    
+    console.log('✅ Content exists, file_url:', content.file_url)
+    
     const downloadUrl = contentAPI.downloadUrl(content.file_url, content.type)
+    console.log('✅ downloadUrl returned:', downloadUrl)
+    
     if (!downloadUrl) {
+      console.error('❌ Download failed: downloadUrl is empty!')
       toast.error('Unable to generate download link')
       return
     }
-    const link = document.createElement('a')
-    link.href = downloadUrl
-    link.download = `${content.title}.pdf`
-    link.target = '_blank'
-    link.setAttribute('download', '')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    toast.success('Download started!')
+    
+    try {
+      console.log('🔴 Creating link element...')
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `${content.title}.pdf`
+      link.target = '_blank'
+      link.setAttribute('download', '')
+      
+      console.log('🔴 Link properties set:')
+      console.log('  - href:', link.href)
+      console.log('  - download:', link.download)
+      console.log('  - target:', link.target)
+      
+      console.log('🔴 Appending link to body...')
+      document.body.appendChild(link)
+      
+      console.log('🔴 Triggering click...')
+      link.click()
+      
+      console.log('🔴 Removing link from body...')
+      document.body.removeChild(link)
+      
+      console.log('✅ DOWNLOAD SUCCESS!')
+      toast.success('Download started!')
+    } catch (error) {
+      console.error('❌ Download error:', error)
+      toast.error('Download failed: ' + error.message)
+    }
   }
 
   if (isLoading) {
