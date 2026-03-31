@@ -25,21 +25,12 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
       console.log('✅ [PDFViewerPage] Content fetched:', response.data)
       setContent(response.data)
       
-      // Fetch PDF as blob for react-pdf
+      // Generate public URL for react-pdf (blob URLs have CORS issues)
       if (response.data && response.data.file_url) {
-        console.log('📖 [PDFViewerPage] Starting getPdfForViewer...')
-        try {
-          const blobUrl = await contentAPI.getPdfForViewer(response.data.file_url, response.data.type)
-          console.log('✅ [PDFViewerPage] SUCCESS - Blob URL created:', blobUrl)
-          setPdfUrl(blobUrl)
-        } catch (blobError) {
-          console.error('❌ [PDFViewerPage] getPdfForViewer failed:', blobError)
-          console.error('❌ [PDFViewerPage] Error message:', blobError.message)
-          console.error('❌ [PDFViewerPage] Falling back to public URL...')
-          // Fallback to public URL if blob fails
-          const publicUrl = contentAPI.downloadUrl(response.data.file_url, response.data.type)
-          setPdfUrl(publicUrl)
-        }
+        console.log('📖 [PDFViewerPage] Generating public URL for PDF...')
+        const publicUrl = contentAPI.downloadUrl(response.data.file_url, response.data.type)
+        console.log('✅ [PDFViewerPage] Public URL generated:', publicUrl)
+        setPdfUrl(publicUrl)
       }
     } catch (error) {
       console.error('❌ [PDFViewerPage] Error fetching content:', error)
@@ -51,51 +42,45 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
   }
 
   const handleDownload = () => {
-    console.log('🔴 START: Download button handler called')
+    console.log('🔴 [PDFViewerPage.handleDownload] FIRED')
+    console.log('🔴 content exists?:', !!content)
+    console.log('🔴 content.file_url:', content?.file_url)
     
     if (!content || !content.file_url) {
-      console.error('❌ Download failed: No content or file_url')
+      console.error('❌ [PDFViewerPage] Download failed: No content or file_url')
       toast.error('File URL not available')
       return
     }
     
-    console.log('✅ Content exists, file_url:', content.file_url)
-    
+    console.log('✅ [PDFViewerPage] Content exists, getting download URL...')
     const downloadUrl = contentAPI.downloadUrl(content.file_url, content.type)
-    console.log('✅ downloadUrl returned:', downloadUrl)
+    console.log('✅ [PDFViewerPage] downloadUrl returned:', downloadUrl)
     
     if (!downloadUrl) {
-      console.error('❌ Download failed: downloadUrl is empty!')
+      console.error('❌ [PDFViewerPage] downloadUrl is empty!')
       toast.error('Unable to generate download link')
       return
     }
     
     try {
-      console.log('🔴 Creating link element...')
+      console.log('🔴 [PDFViewerPage] Creating download link element...')
       const link = document.createElement('a')
       link.href = downloadUrl
       link.download = `${content.title}.pdf`
-      link.target = '_blank'
-      link.setAttribute('download', '')
       
-      console.log('🔴 Link properties set:')
-      console.log('  - href:', link.href)
-      console.log('  - download:', link.download)
-      console.log('  - target:', link.target)
+      console.log('🔴 [PDFViewerPage] Link properties:')
+      console.log('   href:', link.href)
+      console.log('   download:', link.download)
       
-      console.log('🔴 Appending link to body...')
+      console.log('🔴 [PDFViewerPage] Appending to body and clicking...')
       document.body.appendChild(link)
-      
-      console.log('🔴 Triggering click...')
       link.click()
-      
-      console.log('🔴 Removing link from body...')
       document.body.removeChild(link)
       
-      console.log('✅ DOWNLOAD SUCCESS!')
+      console.log('✅ [PDFViewerPage] DOWNLOAD INITIATED!')
       toast.success('Download started!')
     } catch (error) {
-      console.error('❌ Download error:', error)
+      console.error('❌ [PDFViewerPage] Error during download:', error)
       toast.error('Download failed: ' + error.message)
     }
   }

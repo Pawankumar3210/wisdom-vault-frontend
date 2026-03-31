@@ -34,8 +34,20 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
   }
 
   const handleDownload = () => {
-    console.log('📥 Download button clicked')
-    onDownload()
+    console.log('� [PDFViewer.handleDownload] CLICKED - onDownload callback exists?', typeof onDownload)
+    if (typeof onDownload !== 'function') {
+      console.error('❌ [PDFViewer] onDownload is not a function!', onDownload)
+      toast.error('Download handler not available')
+      return
+    }
+    console.log('🔴 [PDFViewer] Calling onDownload callback...')
+    try {
+      onDownload()
+      console.log('✅ [PDFViewer] onDownload callback completed')
+    } catch (err) {
+      console.error('❌ [PDFViewer] onDownload threw error:', err)
+      toast.error('Download failed: ' + err.message)
+    }
   }
 
   const onDocumentLoadSuccess = ({ numPages }) => {
