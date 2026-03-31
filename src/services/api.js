@@ -51,6 +51,7 @@ export const contentAPI = {
           subject_id: formData.get('subject_id'),
           type: formData.get('type'),
           file_url: uploadData.path,
+          file_key: uploadData.path,
         },
       ])
 
@@ -83,6 +84,7 @@ export const contentAPI = {
 
       if (uploadError) throw uploadError
       updates.file_url = uploadData.path
+      updates.file_key = uploadData.path
     }
 
     const { data, error } = await supabase
