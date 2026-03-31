@@ -35,8 +35,8 @@ const AdminDashboard = ({ onLogout }) => {
       setStats(response.data)
 
     } catch (error) {
-      console.error('Error fetching stats:', error)
-      toast.error('Failed to load statistics')
+      console.error('❌ Error fetching stats:', error)
+      toast.error(error.message || 'Failed to load statistics')
     } finally {
       setIsLoading(false)
     }

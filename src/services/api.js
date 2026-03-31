@@ -113,36 +113,63 @@ export const contentAPI = {
 export const statsAPI = {
   getStats: async () => {
     try {
-      const [
-        { count: totalSubjects, error: subjectError },
-        { count: totalNotes, error: notesError },
-        { count: totalQuestionBanks, error: qbError },
-        { count: totalPapers, error: qpError },
-      ] = await Promise.all([
-        supabase.from('subjects').select('*', { count: 'exact', head: true }),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'note'),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'qb'),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'paper'),
-      ])
+      console.log('Starting stats fetch...')
+      
+      // Fetch each stat individually to get better error handling
+      const subjectsRes = await supabase
+        .from('subjects')
+        .select('*', { count: 'exact', head: true })
+      
+      const notesRes = await supabase
+        .from('content')
+        .select('*', { count: 'exact', head: true })
+        .eq('type', 'note')
+      
+      const qbRes = await supabase
+        .from('content')
+        .select('*', { count: 'exact', head: true })
+        .eq('type', 'qb')
+      
+      const papersRes = await supabase
+        .from('content')
+        .select('*', { count: 'exact', head: true })
+        .eq('type', 'paper')
 
-      // Log any errors from individual queries
-      if (subjectError) console.error('Subjects error:', subjectError)
-      if (notesError) console.error('Notes error:', notesError)
-      if (qbError) console.error('Question banks error:', qbError)
-      if (qpError) console.error('Question papers error:', qpError)
+      // Check for errors
+      if (subjectsRes.error) {
+        console.error('❌ Subjects query error:', subjectsRes.error)
+        throw new Error(`Subjects query failed: ${subjectsRes.error.message}`)
+      }
+      if (notesRes.error) {
+        console.error('❌ Notes query error:', notesRes.error)
+        throw new Error(`Notes query failed: ${notesRes.error.message}`)
+      }
+      if (qbRes.error) {
+        console.error('❌ Question Banks query error:', qbRes.error)
+        throw new Error(`Question Banks query failed: ${qbRes.error.message}`)
+      }
+      if (papersRes.error) {
+        console.error('❌ Papers query error:', papersRes.error)
+        throw new Error(`Papers query failed: ${papersRes.error.message}`)
+      }
 
-      console.log('Stats fetched:', { totalSubjects, totalNotes, totalQuestionBanks, totalPapers })
+      const totalSubjects = subjectsRes.count || 0
+      const totalNotes = notesRes.count || 0
+      const totalQuestionBanks = qbRes.count || 0
+      const totalPapers = papersRes.count || 0
+
+      console.log('✅ Stats fetched successfully:', { totalSubjects, totalNotes, totalQuestionBanks, totalPapers })
 
       return {
         data: {
-          totalSubjects: totalSubjects || 0,
-          totalNotes: totalNotes || 0,
-          totalQuestionBanks: totalQuestionBanks || 0,
-          totalPapers: totalPapers || 0,
+          totalSubjects,
+          totalNotes,
+          totalQuestionBanks,
+          totalPapers,
         },
       }
     } catch (error) {
-      console.error('Error fetching stats:', error)
+      console.error('❌ Error fetching stats:', error)
       throw error
     }
   },

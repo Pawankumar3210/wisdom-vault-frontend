@@ -34,22 +34,31 @@ const QuestionBanksPage = ({ onLogout }) => {
       // Fetch question banks
       const { data: contentsData, error: contentError } = await supabase
         .from('content')
-        .select('*, subjects(name)') // corrected relation name
+        .select('*, subject:subject_id(name)')
         .eq('type', 'qb')
         .order('created_at', { ascending: false })
-      if (contentError) throw contentError
+      if (contentError) {
+        console.error('❌ Content fetch error:', contentError)
+        throw new Error(`Failed to fetch question banks: ${contentError.message}`)
+      }
 
       // Fetch subjects
       const { data: subjectsData, error: subjectError } = await supabase
         .from('subjects')
         .select('*')
-      if (subjectError) throw subjectError
+      if (subjectError) {
+        console.error('❌ Subjects fetch error:', subjectError)
+        throw new Error(`Failed to fetch subjects: ${subjectError.message}`)
+      }
+
+      console.log('✅ Fetched contents:', contentsData)
+      console.log('✅ Fetched subjects:', subjectsData)
 
       setContents(contentsData || [])
       setSubjects(subjectsData || [])
     } catch (error) {
       console.error('Error fetching data:', error)
-      toast.error('Failed to load data')
+      toast.error(error.message || 'Failed to load data')
     } finally {
       setIsLoading(false)
     }

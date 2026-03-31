@@ -35,25 +35,34 @@ const QuestionPapersPage = ({ onLogout }) => {
       const { data: subjectsData, error: subjectsError } = await supabase
         .from('subjects')
         .select('*')
-      if (subjectsError) throw subjectsError
+      if (subjectsError) {
+        console.error('❌ Subjects fetch error:', subjectsError)
+        throw new Error(`Failed to fetch subjects: ${subjectsError.message}`)
+      }
       setSubjects(subjectsData || [])
 
       // Fetch question papers
       const { data: papersData, error: papersError } = await supabase
         .from('content')
-        .select('*, subjects(name)')
+        .select('*, subject:subject_id(name)')
         .eq('type', 'paper')
-      if (papersError) throw papersError
+      if (papersError) {
+        console.error('❌ Papers fetch error:', papersError)
+        throw new Error(`Failed to fetch question papers: ${papersError.message}`)
+      }
+
+      console.log('✅ Fetched papers:', papersData)
+      console.log('✅ Fetched subjects:', subjectsData)
 
       setPapers(
         (papersData || []).map((p) => ({
           ...p,
-          subject: p.subjects?.name || 'Unknown',
+          subject: p.subject?.name || 'Unknown',
         }))
       )
     } catch (error) {
       console.error('Error fetching data:', error)
-      toast.error('Failed to load data')
+      toast.error(error.message || 'Failed to load data')
     } finally {
       setIsLoading(false)
     }
