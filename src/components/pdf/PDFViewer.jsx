@@ -24,11 +24,6 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
     }
   }, [fileUrl])
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages)
-    setIsLoading(false)
-  }
-
   const goToPreviousPage = () => {
     if (pageNumber > 1) setPageNumber(pageNumber - 1)
   }
