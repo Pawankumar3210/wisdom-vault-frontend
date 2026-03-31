@@ -34,7 +34,7 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
       toast.error('File URL not available')
       return
     }
-    const downloadUrl = contentAPI.downloadUrl(content.file_url, content.content_type)
+    const downloadUrl = contentAPI.downloadUrl(content.file_url, content.type)
     if (!downloadUrl) {
       toast.error('Unable to generate download link')
       return
@@ -71,13 +71,16 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
     )
   }
 
+  // Generate full public URL for PDF viewer
+  const publicUrl = contentAPI.downloadUrl(content.file_url, content.type)
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <ParticleBackground />
       <Header isAdminLoggedIn={isAdminLoggedIn} onLogout={onLogout} />
       <div className="pt-16">
         <PDFViewer
-          fileUrl={content.file_url}
+          fileUrl={publicUrl}
           fileName={content.title}
           onDownload={handleDownload}
         />

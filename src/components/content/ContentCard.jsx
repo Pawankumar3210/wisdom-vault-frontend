@@ -58,7 +58,7 @@ const ContentCard = ({ item, onDownload }) => {
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              onDownload(item.file_url, item.title, item.content_type)
+              onDownload(item.file_url, item.title, item.type)
             }}
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/40 hover:to-purple-500/40 border border-blue-500/30 hover:border-blue-400/60 text-blue-400 hover:text-blue-300 rounded text-xs font-sci-fi transition-all duration-200"
           >

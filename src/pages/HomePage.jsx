@@ -42,12 +42,12 @@ const HomePage = ({ isAdminLoggedIn, onLogout }) => {
     }
   }
 
-  const handleDownload = (fileUrl, title, contentType = 'note') => {
+  const handleDownload = (fileUrl, title, contentType) => {
     if (!fileUrl) {
       toast.error('File URL not found')
       return
     }
-    const downloadUrl = contentAPI.downloadUrl(fileUrl, contentType)
+    const downloadUrl = contentAPI.downloadUrl(fileUrl, contentType || 'note')
     if (!downloadUrl) {
       toast.error('Unable to generate download link')
       return
