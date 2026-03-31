@@ -12,10 +12,11 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
   const [numPages, setNumPages] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
 
-  console.log('🔍 PDFViewer received fileUrl:', fileUrl)
-  console.log('🔍 PDFViewer received fileName:', fileName)
+  console.log('🔍 [PDFViewer] received fileUrl:', fileUrl)
+  console.log('🔍 [PDFViewer] received fileName:', fileName)
   
   useEffect(() => {
     console.log('🔍 PDFViewer useEffect - fileUrl changed:', fileUrl)
@@ -44,10 +45,12 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
   }
 
   const onDocumentError = (error) => {
-    console.error('❌ PDF Document Error:', error)
-    console.error('❌ Error name:', error?.name)
-    console.error('❌ Error message:', error?.message)
-    console.error('❌ Error details:', JSON.stringify(error, null, 2))
+    console.error('❌ [PDFViewer] PDF Document Error:', error)
+    console.error('❌ [PDFViewer] Error name:', error?.name)
+    console.error('❌ [PDFViewer] Error message:', error?.message)
+    console.error('❌ [PDFViewer] Full error:', JSON.stringify(error, null, 2))
+    setIsLoading(false)
+    setError(`Failed to load PDF: ${error?.message || 'Unknown error'}`)
     toast.error(`Failed to load PDF: ${error?.message || 'Unknown error'}`)
   }
 
@@ -73,8 +76,9 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
           </div>
 
           <button
+            type="button"
             onClick={(e) => {
-              console.log('📥 Download button clicked - preventing default')
+              console.log('🔴 [PDFViewer] Download button clicked')
               e.preventDefault()
               e.stopPropagation()
               handleDownload()
@@ -89,28 +93,42 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
 
       {/* PDF Viewer */}
       <div className="flex-1 flex items-center justify-center overflow-auto p-4">
-        {isLoading && (
+        {isLoading && !error && (
           <div className="flex flex-col items-center gap-4">
             <FuturisticLoader />
             <p className="text-cyan-400 font-sci-fi">Loading PDF...</p>
           </div>
         )}
 
-        <div className="bg-slate-800/50 border border-cyan-500/30 rounded-lg p-4 max-w-4xl">
-          <Document 
-            file={fileUrl} 
-            onLoadSuccess={onDocumentLoadSuccess}
-            onError={onDocumentError}
-            loading={<FuturisticLoader />}
-          >
-            <Page
-              pageNumber={pageNumber}
-              width={Math.min(window.innerWidth - 100, 1000)}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          </Document>
-        </div>
+        {error && (
+          <div className="flex flex-col items-center gap-4 bg-red-500/20 border border-red-500/50 rounded-lg p-8">
+            <p className="text-red-400 font-sci-fi text-center">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-500/30 hover:bg-red-500/50 border border-red-500 rounded text-red-300 font-sci-fi text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <div className="bg-slate-800/50 border border-cyan-500/30 rounded-lg p-4 max-w-4xl">
+            <Document 
+              file={fileUrl} 
+              onLoadSuccess={onDocumentLoadSuccess}
+              onError={onDocumentError}
+              loading={<FuturisticLoader />}
+            >
+              <Page
+                pageNumber={pageNumber}
+                width={Math.min(window.innerWidth - 100, 1000)}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            </Document>
+          </div>
+        )}
       </div>
 
       {/* Navigation Controls */}

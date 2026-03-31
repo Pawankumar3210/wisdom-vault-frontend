@@ -19,21 +19,31 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
   const fetchContent = async () => {
     try {
       setIsLoading(true)
+      console.log('📍 [PDFViewerPage] Fetching content with ID:', id)
+      
       const response = await contentAPI.getById(id)
-      console.log('📍 Fetching content with ID:', id)
-      console.log('✅ Content fetched:', response.data)
+      console.log('✅ [PDFViewerPage] Content fetched:', response.data)
       setContent(response.data)
       
       // Fetch PDF as blob for react-pdf
       if (response.data && response.data.file_url) {
-        console.log('📖 Fetching PDF blob for viewer...')
-        const blobUrl = await contentAPI.getPdfForViewer(response.data.file_url, response.data.type)
-        console.log('📖 Blob URL created:', blobUrl)
-        setPdfUrl(blobUrl)
+        console.log('📖 [PDFViewerPage] Starting getPdfForViewer...')
+        try {
+          const blobUrl = await contentAPI.getPdfForViewer(response.data.file_url, response.data.type)
+          console.log('✅ [PDFViewerPage] SUCCESS - Blob URL created:', blobUrl)
+          setPdfUrl(blobUrl)
+        } catch (blobError) {
+          console.error('❌ [PDFViewerPage] getPdfForViewer failed:', blobError)
+          console.error('❌ [PDFViewerPage] Error message:', blobError.message)
+          console.error('❌ [PDFViewerPage] Falling back to public URL...')
+          // Fallback to public URL if blob fails
+          const publicUrl = contentAPI.downloadUrl(response.data.file_url, response.data.type)
+          setPdfUrl(publicUrl)
+        }
       }
     } catch (error) {
-      console.error('❌ Error fetching content:', error)
-      console.error('❌ Error message:', error.message)
+      console.error('❌ [PDFViewerPage] Error fetching content:', error)
+      console.error('❌ [PDFViewerPage] Error message:', error.message)
       toast.error(error.message || 'Failed to load content')
     } finally {
       setIsLoading(false)
@@ -111,25 +121,34 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
     )
   }
 
-  // Generate full public URL for PDF viewer
-  const publicUrl = pdfUrl || contentAPI.downloadUrl(content.file_url, content.type)
+  // Use blob URL if available, otherwise use public URL
+  let displayUrl = pdfUrl
+  if (!displayUrl && content) {
+    displayUrl = contentAPI.downloadUrl(content.file_url, content.type)
+  }
   
-  console.log('🔍 PDFViewerPage rendering:')
-  console.log('📄 content.file_url:', content.file_url)
-  console.log('📊 content.type:', content.type)
-  console.log('🌐 Using publicUrl:', publicUrl)
+  console.log('🔍 [PDFViewerPage] FINAL RENDER:')
+  console.log('📄 content.file_url:', content?.file_url)
+  console.log('📊 content.type:', content?.type)
   console.log('📖 pdfUrl (blob):', pdfUrl)
+  console.log('🌐 displayUrl (final):', displayUrl)
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <ParticleBackground />
       <Header isAdminLoggedIn={isAdminLoggedIn} onLogout={onLogout} />
       <div className="pt-16">
-        {publicUrl && <PDFViewer
-          fileUrl={publicUrl}
-          fileName={content.title}
-          onDownload={handleDownload}
-        />}
+        {displayUrl ? (
+          <PDFViewer
+            fileUrl={displayUrl}
+            fileName={content.title}
+            onDownload={handleDownload}
+          />
+        ) : (
+          <div className="text-center pt-32">
+            <p className="text-slate-400">Loading PDF...</p>
+          </div>
+        )}
       </div>
     </div>
   )

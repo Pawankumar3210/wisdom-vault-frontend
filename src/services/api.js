@@ -160,7 +160,7 @@ export const contentAPI = {
   // Special method for react-pdf to handle CORS issues
   getPdfForViewer: async (fileName, contentType = 'note') => {
     if (!fileName) {
-      console.error('❌ getPdfForViewer: fileName is empty!')
+      console.error('❌ [getPdfForViewer] fileName is empty!')
       throw new Error('No file name provided')
     }
     
@@ -173,25 +173,51 @@ export const contentAPI = {
         bucketName = 'question-papers'
       }
       
-      console.log('📖 getPdfForViewer - fetching from bucket:', bucketName, 'file:', fileName)
+      console.log('📖 [getPdfForViewer] Starting - bucket:', bucketName, 'file:', fileName)
       
-      // Download file as blob
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .download(fileName)
+      // Create abort controller with 30 second timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
       
-      if (error) {
-        console.error('❌ Download error:', error)
-        throw error
+      try {
+        // Download file as blob
+        console.log('📖 [getPdfForViewer] Calling supabase.storage.download()...')
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .download(fileName)
+        
+        clearTimeout(timeoutId)
+        
+        if (error) {
+          console.error('❌ [getPdfForViewer] Download error:', error)
+          console.error('❌ [getPdfForViewer] Error details:', JSON.stringify(error, null, 2))
+          throw error
+        }
+        
+        if (!data) {
+          console.error('❌ [getPdfForViewer] No data returned!')
+          throw new Error('No data returned from download')
+        }
+        
+        console.log('✅ [getPdfForViewer] File downloaded, size:', data.size, 'type:', data.type)
+        
+        // Create blob URL for react-pdf
+        const blobUrl = URL.createObjectURL(data)
+        console.log('✅ [getPdfForViewer] SUCCESS - Blob URL created:', blobUrl)
+        
+        return blobUrl
+      } catch (err) {
+        clearTimeout(timeoutId)
+        if (err.name === 'AbortError') {
+          console.error('❌ [getPdfForViewer] Request timed out after 30 seconds')
+          throw new Error('PDF download timed out')
+        }
+        throw err
       }
-      
-      // Create blob URL for react-pdf
-      const blobUrl = URL.createObjectURL(data)
-      console.log('✅ Created blob URL:', blobUrl)
-      
-      return blobUrl
     } catch (err) {
-      console.error('❌ Error in getPdfForViewer:', err)
+      console.error('❌ [getPdfForViewer] Fatal error:', err)
+      console.error('❌ [getPdfForViewer] Error name:', err?.name)
+      console.error('❌ [getPdfForViewer] Error message:', err?.message)
       throw err
     }
   },
