@@ -28,26 +28,43 @@ export const contentAPI = {
   },
 
   create: async (formData) => {
-    const file = formData.get('file')
-    const fileName = `${Date.now()}_${file.name}`
+    try {
+      const file = formData.get('file')
+      const fileName = `${Date.now()}_${file.name}`
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('pdfs')
-      .upload(fileName, file)
+      console.log('Uploading file:', fileName)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(fileName, file)
 
-    if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw new Error(`Upload failed: ${uploadError.message}`)
+      }
 
-    const { data, error } = await supabase.from('content').insert([
-      {
-        title: formData.get('title'),
-        subject_id: formData.get('subject_id'),
-        type: formData.get('type'),
-        file_url: uploadData.path,
-      },
-    ])
+      console.log('File uploaded, data:', uploadData)
+      console.log('Inserting content with:', { title: formData.get('title'), subject_id: formData.get('subject_id'), type: formData.get('type'), file_url: uploadData.path })
 
-    if (error) throw error
-    return { data }
+      const { data, error } = await supabase.from('content').insert([
+        {
+          title: formData.get('title'),
+          subject_id: formData.get('subject_id'),
+          type: formData.get('type'),
+          file_url: uploadData.path,
+        },
+      ])
+
+      if (error) {
+        console.error('Insert error:', error)
+        throw new Error(`Database insert failed: ${error.message}`)
+      }
+      
+      console.log('Content created:', data)
+      return { data }
+    } catch (err) {
+      console.error('Create error:', err)
+      throw err
+    }
   },
 
   update: async (id, formData) => {

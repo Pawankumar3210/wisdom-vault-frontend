@@ -117,7 +117,7 @@ const NotesPage = ({ onLogout }) => {
       await fetchData()
     } catch (error) {
       console.error('Error saving note:', error)
-      toast.error('Failed to save note')
+      toast.error(error.message || 'Failed to save note')
     } finally {
       setIsSubmitting(false)
     }
