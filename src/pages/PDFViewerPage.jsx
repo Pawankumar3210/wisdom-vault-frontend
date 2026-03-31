@@ -20,21 +20,31 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
     try {
       setIsLoading(true)
       const response = await contentAPI.getById(id)
-      setContent(response.data.data)
+      console.log('PDFViewerPage: Content fetched:', response.data)
+      setContent(response.data)
     } catch (error) {
       console.error('Error fetching content:', error)
-      toast.error('Failed to load content')
+      toast.error(error.message || 'Failed to load content')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDownload = () => {
-    if (!content) return
-    const downloadUrl = contentAPI.downloadUrl(id)
+    if (!content || !content.file_url) {
+      toast.error('File URL not available')
+      return
+    }
+    const downloadUrl = contentAPI.downloadUrl(content.file_url)
+    if (!downloadUrl) {
+      toast.error('Unable to generate download link')
+      return
+    }
     const link = document.createElement('a')
     link.href = downloadUrl
     link.download = `${content.title}.pdf`
+    link.target = '_blank'
+    link.setAttribute('download', '')
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

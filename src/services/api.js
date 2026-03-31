@@ -56,6 +56,28 @@ export const contentAPI = {
     return { data }
   },
 
+  getById: async (id) => {
+    try {
+      console.log('📍 Fetching content with ID:', id)
+      const { data, error } = await supabase
+        .from('content')
+        .select('*, subject:subject_id(name)')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        console.error('❌ Get by ID error:', error)
+        throw new Error(`Failed to fetch content: ${error.message}`)
+      }
+
+      console.log('✅ Content fetched:', data)
+      return { data }
+    } catch (err) {
+      console.error('❌ Error in getById:', err)
+      throw err
+    }
+  },
+
   create: async (formData) => {
     try {
       const file = formData.get('file')

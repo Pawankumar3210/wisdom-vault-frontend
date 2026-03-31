@@ -56,9 +56,11 @@ const HomePage = ({ isAdminLoggedIn, onLogout }) => {
     link.href = downloadUrl
     link.download = `${title}.pdf`
     link.target = '_blank'
+    link.setAttribute('download', '')
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    toast.success('Download started!')
   }
 
   const filteredContents = activeFilter === 'all'
