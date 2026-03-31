@@ -17,17 +17,22 @@ export const subjectAPI = {
 // ========================
 export const contentAPI = {
   getAll: async () => {
-    const { data, error } = await supabase
-      .from('content')
-      .select('*, subject:subject_id(name)')
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('❌ Get all content error:', error)
-      throw new Error(`Failed to fetch all content: ${error.message}`)
+      if (error) {
+        console.error('❌ Get all content error:', error)
+        throw new Error(`Failed to fetch all content: ${error.message}`)
+      }
+      console.log('✅ Fetched all content:', data)
+      return { data }
+    } catch (err) {
+      console.error('❌ Error in getAll:', err)
+      throw err
     }
-    console.log('✅ Fetched all content:', data)
-    return { data }
   },
 
   getByType: async (type) => {
