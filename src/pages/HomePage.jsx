@@ -21,20 +21,30 @@ const HomePage = ({ isAdminLoggedIn, onLogout }) => {
     try {
       setIsLoading(true)
       const response = await contentAPI.getAll()
-      setContents(response.data.data || [])
+      console.log('✅ Contents loaded:', response.data)
+      setContents(response.data || [])
     } catch (error) {
-      console.error('Error fetching contents:', error)
-      toast.error('Failed to load contents')
+      console.error('❌ Error fetching contents:', error)
+      toast.error(error.message || 'Failed to load contents')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleDownload = (id, title) => {
-    const downloadUrl = contentAPI.downloadUrl(id)
+  const handleDownload = (fileUrl, title) => {
+    if (!fileUrl) {
+      toast.error('File URL not found')
+      return
+    }
+    const downloadUrl = contentAPI.downloadUrl(fileUrl)
+    if (!downloadUrl) {
+      toast.error('Unable to generate download link')
+      return
+    }
     const link = document.createElement('a')
     link.href = downloadUrl
     link.download = `${title}.pdf`
+    link.target = '_blank'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -148,7 +158,7 @@ const HomePage = ({ isAdminLoggedIn, onLogout }) => {
               <motion.div key={item.id} variants={itemVariants}>
                 <ContentCard
                   item={item}
-                  onDownload={() => handleDownload(item.id, item.title)}
+                  onDownload={() => handleDownload(item.file_url, item.title)}
                 />
               </motion.div>
             ))}

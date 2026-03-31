@@ -16,10 +16,24 @@ export const subjectAPI = {
 // Content API
 // ========================
 export const contentAPI = {
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('content')
+      .select('*, subject:subject_id(name)')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('❌ Get all content error:', error)
+      throw new Error(`Failed to fetch all content: ${error.message}`)
+    }
+    console.log('✅ Fetched all content:', data)
+    return { data }
+  },
+
   getByType: async (type) => {
     const { data, error } = await supabase
       .from('content')
-      .select('*, subject(name)')
+      .select('*, subject:subject_id(name)')
       .eq('type', type)
       .order('created_at', { ascending: false })
 
@@ -104,6 +118,14 @@ export const contentAPI = {
 
     if (error) throw error
     return { data }
+  },
+
+  downloadUrl: (fileName) => {
+    // Generate public URL for the file in the pdfs bucket
+    const { data } = supabase.storage
+      .from('pdfs')
+      .getPublicUrl(fileName)
+    return data?.publicUrl || ''
   },
 }
 
