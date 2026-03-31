@@ -164,7 +164,7 @@ const NotesPage = ({ onLogout }) => {
               </div>
             </div>
             <button
-              onClick={() => setShowAddForm(!showAddForm) || resetForm()}
+              onClick={() => setShowAddForm(true)}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 hover:from-cyan-500/50 hover:to-blue-500/50 border border-cyan-500/50 text-cyan-300 rounded-lg font-sci-fi transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,217,255,0.4)]"
             >
               <Plus className="w-5 h-5" />
