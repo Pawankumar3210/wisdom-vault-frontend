@@ -119,7 +119,10 @@ const QuestionBanksPage = ({ onLogout }) => {
           title: formData.title,
           subject_id: formData.subject_id
         }
-        if (fileUrl) updateData.file_url = fileUrl
+        if (fileUrl) {
+          updateData.file_url = fileUrl
+          updateData.file_key = fileUrl
+        }
 
         const { error: updateError } = await supabase
           .from('content')
@@ -136,7 +139,8 @@ const QuestionBanksPage = ({ onLogout }) => {
             title: formData.title,
             subject_id: formData.subject_id,
             type: 'qb',
-            file_url: fileUrl
+            file_url: fileUrl,
+            file_key: fileUrl
           }])
         if (insertError) throw insertError
         toast.success('Question bank added successfully')

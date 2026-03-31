@@ -29,7 +29,7 @@ const AdminDashboard = ({ onLogout }) => {
       setIsLoading(true)
 
       // ✅ CORRECT CALL
-      const response = await statsAPI()
+      const response = await statsAPI.getStats()
 
       // ✅ CORRECT DATA ACCESS
       setStats(response.data)

@@ -118,6 +118,7 @@ const QuestionPapersPage = ({ onLogout }) => {
             title: formData.title,
             subject_id: formData.subject_id,
             file_url: fileUrl,
+            file_key: fileUrl,
           })
           .eq('id', editingId)
         if (updateError) throw updateError
@@ -132,6 +133,7 @@ const QuestionPapersPage = ({ onLogout }) => {
               subject_id: formData.subject_id,
               type: 'paper',
               file_url: fileUrl,
+              file_key: fileUrl,
             },
           ])
         if (insertError) throw insertError

@@ -114,16 +114,24 @@ export const statsAPI = {
   getStats: async () => {
     try {
       const [
-        { count: totalSubjects },
-        { count: totalNotes },
-        { count: totalQuestionBanks },
-        { count: totalPapers },
+        { count: totalSubjects, error: subjectError },
+        { count: totalNotes, error: notesError },
+        { count: totalQuestionBanks, error: qbError },
+        { count: totalPapers, error: qpError },
       ] = await Promise.all([
         supabase.from('subjects').select('*', { count: 'exact', head: true }),
         supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'note'),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'question_bank'),
-        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'question_paper'),
+        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'qb'),
+        supabase.from('content').select('*', { count: 'exact', head: true }).eq('type', 'paper'),
       ])
+
+      // Log any errors from individual queries
+      if (subjectError) console.error('Subjects error:', subjectError)
+      if (notesError) console.error('Notes error:', notesError)
+      if (qbError) console.error('Question banks error:', qbError)
+      if (qpError) console.error('Question papers error:', qpError)
+
+      console.log('Stats fetched:', { totalSubjects, totalNotes, totalQuestionBanks, totalPapers })
 
       return {
         data: {
