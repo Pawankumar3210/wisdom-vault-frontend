@@ -14,6 +14,9 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
 
+  console.log('🔍 PDFViewer received fileUrl:', fileUrl)
+  console.log('🔍 PDFViewer received fileName:', fileName)
+
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages)
     setIsLoading(false)
@@ -28,8 +31,13 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
   }
 
   const handleDownload = () => {
+    console.log('📥 Download button clicked')
     onDownload()
-    toast.success('Download started!')
+  }
+
+  const onDocumentError = (error) => {
+    console.error('❌ PDF Document Error:', error)
+    toast.error(`Failed to load PDF: ${error.message}`)
   }
 
   return (
@@ -54,7 +62,12 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
           </div>
 
           <button
-            onClick={handleDownload}
+            onClick={(e) => {
+              console.log('📥 Download button clicked - preventing default')
+              e.preventDefault()
+              e.stopPropagation()
+              handleDownload()
+            }}
             className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/40 hover:to-purple-500/40 border border-blue-500/30 hover:border-blue-400/60 text-blue-400 hover:text-blue-300 rounded-lg font-sci-fi text-sm flex items-center gap-2 transition-all duration-200"
           >
             <Download className="w-4 h-4" />
@@ -73,7 +86,12 @@ const PDFViewer = ({ fileUrl, fileName, onDownload }) => {
         )}
 
         <div className="bg-slate-800/50 border border-cyan-500/30 rounded-lg p-4 max-w-4xl">
-          <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess} loading={<FuturisticLoader />}>
+          <Document 
+            file={fileUrl} 
+            onLoadSuccess={onDocumentLoadSuccess}
+            onError={onDocumentError}
+            loading={<FuturisticLoader />}
+          >
             <Page
               pageNumber={pageNumber}
               width={Math.min(window.innerWidth - 100, 1000)}

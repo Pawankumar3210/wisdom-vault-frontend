@@ -74,6 +74,11 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
   // Generate full public URL for PDF viewer
   const publicUrl = contentAPI.downloadUrl(content.file_url, content.type)
   
+  console.log('🔍 PDFViewerPage rendering:')
+  console.log('📄 content.file_url:', content.file_url)
+  console.log('📊 content.type:', content.type)
+  console.log('🌐 Generated publicUrl:', publicUrl)
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <ParticleBackground />

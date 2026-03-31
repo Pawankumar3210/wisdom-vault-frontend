@@ -158,7 +158,10 @@ export const contentAPI = {
   },
 
   downloadUrl: (fileName, contentType = 'note') => {
-    if (!fileName) return ''
+    if (!fileName) {
+      console.error('❌ downloadUrl: fileName is empty!')
+      return ''
+    }
     
     try {
       // Determine bucket based on content type
@@ -170,15 +173,21 @@ export const contentAPI = {
         bucketName = 'question-papers'
       }
       
-      console.log('📥 Generating download URL - fileName:', fileName, 'type:', contentType, 'bucket:', bucketName)
+      console.log('📥 downloadUrl() called - fileName:', fileName, 'type:', contentType, 'bucket:', bucketName)
       
       // Generate public URL for the file
       const { data } = supabase.storage
         .from(bucketName)
         .getPublicUrl(fileName)
       
-      console.log('📥 Public URL generated:', data?.publicUrl)
-      return data?.publicUrl || ''
+      console.log('📥 Generated publicUrl:', data?.publicUrl)
+      
+      if (!data?.publicUrl) {
+        console.error('❌ downloadUrl: Failed to generate URL! data:', data)
+        return ''
+      }
+      
+      return data.publicUrl
     } catch (err) {
       console.error('❌ Error generating download URL:', err)
       return ''
