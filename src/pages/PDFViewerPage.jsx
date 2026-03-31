@@ -4,7 +4,6 @@ import toast from 'react-hot-toast'
 import Header from '../components/ui/Header'
 import ParticleBackground from '../components/ui/ParticleBackground'
 import PDFViewer from '../components/pdf/PDFViewer'
-import FuturisticLoader from '../components/ui/FuturisticLoader'
 import { contentAPI } from '../services/api'
 
 const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
@@ -35,7 +34,7 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
       toast.error('File URL not available')
       return
     }
-    const downloadUrl = contentAPI.downloadUrl(content.file_url)
+    const downloadUrl = contentAPI.downloadUrl(content.file_url, content.content_type)
     if (!downloadUrl) {
       toast.error('Unable to generate download link')
       return
@@ -53,13 +52,9 @@ const PDFViewerPage = ({ isAdminLoggedIn, onLogout }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <ParticleBackground />
         <Header isAdminLoggedIn={isAdminLoggedIn} onLogout={onLogout} />
-        <div className="flex flex-col items-center gap-4 pt-20">
-          <FuturisticLoader />
-          <p className="text-cyan-400 font-sci-fi">Loading content...</p>
-        </div>
       </div>
     )
   }

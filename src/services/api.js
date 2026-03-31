@@ -157,12 +157,32 @@ export const contentAPI = {
     return { data }
   },
 
-  downloadUrl: (fileName) => {
-    // Generate public URL for the file in the pdfs bucket
-    const { data } = supabase.storage
-      .from('pdfs')
-      .getPublicUrl(fileName)
-    return data?.publicUrl || ''
+  downloadUrl: (fileName, contentType = 'note') => {
+    if (!fileName) return ''
+    
+    try {
+      // Determine bucket based on content type
+      let bucketName = 'pdfs' // default for notes
+      
+      if (contentType === 'qb' || contentType === 'question_bank') {
+        bucketName = 'question_banks'
+      } else if (contentType === 'paper' || contentType === 'question_paper') {
+        bucketName = 'question-papers'
+      }
+      
+      console.log('📥 Generating download URL - fileName:', fileName, 'type:', contentType, 'bucket:', bucketName)
+      
+      // Generate public URL for the file
+      const { data } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName)
+      
+      console.log('📥 Public URL generated:', data?.publicUrl)
+      return data?.publicUrl || ''
+    } catch (err) {
+      console.error('❌ Error generating download URL:', err)
+      return ''
+    }
   },
 }
 
