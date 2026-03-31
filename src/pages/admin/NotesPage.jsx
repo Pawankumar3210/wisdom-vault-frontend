@@ -6,7 +6,8 @@ import ParticleBackground from '../../components/ui/ParticleBackground'
 import FuturisticLoader from '../../components/ui/FuturisticLoader'
 import { Plus, Edit2, Trash2, ArrowLeft, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { contentAPI, subjectAPI } from '../../services/api'
+import { contentAPI } from '../../services/api'
+import { supabase } from '../../services/supabaseClient'
 
 const NotesPage = ({ onLogout }) => {
   const navigate = useNavigate()
@@ -32,12 +33,22 @@ const NotesPage = ({ onLogout }) => {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const [contentsRes, subjectsRes] = await Promise.all([
-        contentAPI.getByType('note'),
-        subjectAPI.getAll(),
-      ])
-      setContents(contentsRes.data || [])
-      setSubjects(subjectsRes.data || [])
+      // Fetch notes
+      const { data: contentsData, error: contentError } = await supabase
+        .from('content')
+        .select('*, subjects(name)')
+        .eq('type', 'note')
+        .order('created_at', { ascending: false })
+      if (contentError) throw contentError
+
+      // Fetch subjects
+      const { data: subjectsData, error: subjectError } = await supabase
+        .from('subjects')
+        .select('*')
+      if (subjectError) throw subjectError
+
+      setContents(contentsData || [])
+      setSubjects(subjectsData || [])
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to load data')
