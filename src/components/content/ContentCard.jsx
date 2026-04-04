@@ -28,7 +28,7 @@ const ContentCard = ({ item, onDownload }) => {
       {/* Glow effect on hover */}
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-400/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:via-cyan-400/20 group-hover:to-blue-500/10 rounded-lg transition-all duration-300" />
 
-      <div className="relative z-10">
+      <div className="relative z-20">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -46,10 +46,10 @@ const ContentCard = ({ item, onDownload }) => {
         <p className="text-xs text-slate-400 mb-4">{item.subject}</p>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-3 border-t border-cyan-500/10">
+        <div className="flex gap-2 pt-3 border-t border-cyan-500/10 relative z-20">
           <button
             onClick={() => navigate(`/viewer/${item.id}`)}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/40 hover:to-blue-500/40 border border-cyan-500/30 hover:border-cyan-400/60 text-cyan-400 hover:text-cyan-300 rounded text-xs font-sci-fi transition-all duration-200"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/40 hover:to-blue-500/40 border border-cyan-500/30 hover:border-cyan-400/60 text-cyan-400 hover:text-cyan-300 rounded text-xs font-sci-fi transition-all duration-200 relative z-20 cursor-pointer"
           >
             <Eye className="w-4 h-4" />
             View
@@ -60,7 +60,7 @@ const ContentCard = ({ item, onDownload }) => {
               e.stopPropagation()
               onDownload(item.file_url, item.title, item.type)
             }}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/40 hover:to-purple-500/40 border border-blue-500/30 hover:border-blue-400/60 text-blue-400 hover:text-blue-300 rounded text-xs font-sci-fi transition-all duration-200"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/40 hover:to-purple-500/40 border border-blue-500/30 hover:border-blue-400/60 text-blue-400 hover:text-blue-300 rounded text-xs font-sci-fi transition-all duration-200 relative z-20 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Download

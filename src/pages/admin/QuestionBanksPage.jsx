@@ -231,10 +231,8 @@ const QuestionBanksPage = ({ onLogout }) => {
 
           {/* Add/Edit Form */}
           {showAddForm && (
-            <motion.div
+            <div
               className="mb-8 bg-slate-800/50 border border-cyan-500/30 rounded-lg p-6 relative z-30"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
             >
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -320,7 +318,7 @@ const QuestionBanksPage = ({ onLogout }) => {
                   </button>
                 </div>
               </form>
-            </motion.div>
+            </div>
           )}
 
           {/* Question Banks Table */}
