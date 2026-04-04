@@ -109,6 +109,7 @@ const QuestionPapersPage = ({ onLogout }) => {
 
     setIsSubmitting(true)
     try {
+      console.log('📤 [Paper] Uploading question paper:', formData.title)
       let fileUrl = null
 
       // Upload PDF to Supabase Storage
@@ -116,10 +117,15 @@ const QuestionPapersPage = ({ onLogout }) => {
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('question-papers')
         .upload(fileName, formData.file)
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('❌ [Paper] Storage upload error:', uploadError)
+        throw new Error(`Storage upload failed: ${uploadError.message}`)
+      }
+      console.log('✅ [Paper] File uploaded successfully')
       fileUrl = supabase.storage.from('question-papers').getPublicUrl(fileName).data.publicUrl
 
       if (editingId) {
+        console.log('📝 [Paper] Updating question paper:', editingId)
         // Update record
         const { error: updateError } = await supabase
           .from('content')
@@ -130,9 +136,14 @@ const QuestionPapersPage = ({ onLogout }) => {
             file_key: fileUrl,
           })
           .eq('id', editingId)
-        if (updateError) throw updateError
+        if (updateError) {
+          console.error('❌ [Paper] Update error:', updateError)
+          throw new Error(`Update failed: ${updateError.message}`)
+        }
+        console.log('✅ [Paper] Question paper updated successfully')
         toast.success('Question paper updated successfully')
       } else {
+        console.log('➕ [Paper] Creating new question paper')
         // Create new record
         const { error: insertError } = await supabase
           .from('content')
@@ -145,7 +156,11 @@ const QuestionPapersPage = ({ onLogout }) => {
               file_key: fileUrl,
             },
           ])
-        if (insertError) throw insertError
+        if (insertError) {
+          console.error('❌ [Paper] Insert error:', insertError)
+          throw new Error(`Insert failed: ${insertError.message}`)
+        }
+        console.log('✅ [Paper] Question paper created successfully')
         toast.success('Question paper added successfully')
       }
 
@@ -155,8 +170,9 @@ const QuestionPapersPage = ({ onLogout }) => {
       if (fileInputRef.current) fileInputRef.current.value = ''
       await fetchData()
     } catch (error) {
-      console.error('Error saving question paper:', error)
-      toast.error('Failed to save question paper')
+      console.error('❌ Error saving question paper:', error)
+      console.error('❌ Error details:', error.message)
+      toast.error(error.message || 'Failed to save question paper')
     } finally {
       setIsSubmitting(false)
     }

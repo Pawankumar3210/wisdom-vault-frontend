@@ -108,6 +108,7 @@ const NotesPage = ({ onLogout }) => {
 
     setIsSubmitting(true)
     try {
+      console.log('📝 [Note] Uploading note:', formData.title)
       const formDataToSend = new FormData()
       formDataToSend.append('title', formData.title)
       formDataToSend.append('subject_id', formData.subject_id)
@@ -115,17 +116,23 @@ const NotesPage = ({ onLogout }) => {
       formDataToSend.append('file', formData.file)
 
       if (editingId) {
+        console.log('📝 [Note] Updating note:', editingId)
         await contentAPI.update(editingId, formDataToSend)
+        console.log('✅ [Note] Note updated successfully')
         toast.success('Note updated successfully')
       } else {
+        console.log('➕ [Note] Creating new note')
         await contentAPI.create(formDataToSend)
+        console.log('✅ [Note] Note created successfully')
         toast.success('Note added successfully')
       }
 
       resetForm()
       await fetchData()
     } catch (error) {
-      console.error('Error saving note:', error)
+      console.error('❌ Error saving note:', error)
+      console.error('❌ Error details:', error.message)
+      console.error('❌ Error response:', error.response?.data)
       toast.error(error.message || 'Failed to save note')
     } finally {
       setIsSubmitting(false)

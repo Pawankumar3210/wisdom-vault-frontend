@@ -107,6 +107,7 @@ const QuestionBanksPage = ({ onLogout }) => {
       let fileUrl = null
 
       if (formData.file) {
+        console.log('📤 [QB Upload] Uploading file:', formData.file.name)
         // Upload PDF if new file is selected
         const fileExt = formData.file.name.split('.').pop()
         const fileName = `${Date.now()}.${fileExt}`
@@ -114,15 +115,23 @@ const QuestionBanksPage = ({ onLogout }) => {
           .storage
           .from('question_banks')
           .upload(fileName, formData.file, { upsert: true })
-        if (uploadError) throw uploadError
+        if (uploadError) {
+          console.error('❌ [QB Upload] Storage upload error:', uploadError)
+          throw new Error(`Storage upload failed: ${uploadError.message}`)
+        }
 
-        fileUrl = supabase
+        console.log('✅ [QB Upload] File uploaded successfully:', fileName)
+        const publicUrlResult = supabase
           .storage
           .from('question_banks')
-          .getPublicUrl(fileName).data.publicUrl
+          .getPublicUrl(fileName)
+        
+        fileUrl = publicUrlResult.data.publicUrl
+        console.log('✅ [QB Upload] Public URL generated:', fileUrl)
       }
 
       if (editingId) {
+        console.log('📝 [QB] Updating question bank:', editingId)
         // Update existing record
         const updateData = {
           title: formData.title,
@@ -137,10 +146,15 @@ const QuestionBanksPage = ({ onLogout }) => {
           .from('content')
           .update(updateData)
           .eq('id', editingId)
-        if (updateError) throw updateError
+        if (updateError) {
+          console.error('❌ [QB] Update error:', updateError)
+          throw new Error(`Update failed: ${updateError.message}`)
+        }
+        console.log('✅ [QB] Question bank updated successfully')
         toast.success('Question bank updated successfully')
       } else {
         if (!fileUrl) throw new Error('Please select a file to upload')
+        console.log('➕ [QB] Creating new question bank')
         // Insert new record
         const { error: insertError } = await supabase
           .from('content')
@@ -151,7 +165,11 @@ const QuestionBanksPage = ({ onLogout }) => {
             file_url: fileUrl,
             file_key: fileUrl
           }])
-        if (insertError) throw insertError
+        if (insertError) {
+          console.error('❌ [QB] Insert error:', insertError)
+          throw new Error(`Insert failed: ${insertError.message}`)
+        }
+        console.log('✅ [QB] Question bank created successfully')
         toast.success('Question bank added successfully')
       }
 
@@ -161,8 +179,9 @@ const QuestionBanksPage = ({ onLogout }) => {
       if (fileInputRef.current) fileInputRef.current.value = ''
       await fetchData()
     } catch (error) {
-      console.error('Error saving question bank:', error)
-      toast.error('Failed to save question bank')
+      console.error('❌ Error saving question bank:', error)
+      console.error('❌ Error details:', error.message)
+      toast.error(error.message || 'Failed to save question bank')
     } finally {
       setIsSubmitting(false)
     }

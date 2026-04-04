@@ -58,17 +58,27 @@ const SubjectsPage = ({ onLogout }) => {
     setIsSubmitting(true)
     try {
       if (editingId) {
+        console.log('📝 [Subject] Updating subject:', editingId)
         const { error } = await supabase
           .from('subjects')
           .update({ name: formData.name, code: formData.code })
           .eq('id', editingId)
-        if (error) throw error
+        if (error) {
+          console.error('❌ [Subject] Update error:', error)
+          throw new Error(`Update failed: ${error.message}`)
+        }
+        console.log('✅ [Subject] Subject updated successfully')
         toast.success('Subject updated successfully')
       } else {
+        console.log('➕ [Subject] Creating new subject')
         const { error } = await supabase
           .from('subjects')
           .insert([{ name: formData.name, code: formData.code }])
-        if (error) throw error
+        if (error) {
+          console.error('❌ [Subject] Insert error:', error)
+          throw new Error(`Insert failed: ${error.message}`)
+        }
+        console.log('✅ [Subject] Subject created successfully')
         toast.success('Subject added successfully')
       }
       setShowAddForm(false)
@@ -76,8 +86,9 @@ const SubjectsPage = ({ onLogout }) => {
       setEditingId(null)
       await fetchSubjects()
     } catch (error) {
-      console.error('Error saving subject:', error)
-      toast.error('Failed to save subject')
+      console.error('❌ Error saving subject:', error)
+      console.error('❌ Error details:', error.message)
+      toast.error(error.message || 'Failed to save subject')
     } finally {
       setIsSubmitting(false)
     }
