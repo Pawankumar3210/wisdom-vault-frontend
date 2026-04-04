@@ -23,13 +23,18 @@ const SearchBar = () => {
 
       setIsLoading(true)
       try {
+        console.log('🔍 [SearchBar] Searching for:', query)
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/search`, {
           params: { q: query },
         })
+        console.log('✅ [SearchBar] Response:', response.data)
+        console.log('✅ [SearchBar] Results count:', response.data.results?.length || 0)
+        
         setSuggestions(response.data.results || [])
-        setIsOpen(true)
+        setIsOpen(response.data.results && response.data.results.length > 0)
       } catch (error) {
-        console.error('Search error:', error)
+        console.error('❌ [SearchBar] Search error:', error)
+        console.error('❌ [SearchBar] Error details:', error.response?.data || error.message)
         setSuggestions([])
       } finally {
         setIsLoading(false)
@@ -90,7 +95,7 @@ const SearchBar = () => {
 
       {/* Suggestions Dropdown */}
       <AnimatePresence>
-        {isOpen && suggestions.length > 0 && (
+        {query.trim() !== '' && isOpen && (
           <motion.div
             className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-cyan-500/30 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto"
             initial={{ opacity: 0, y: -10 }}
@@ -98,21 +103,31 @@ const SearchBar = () => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {suggestions.map((item, index) => (
-              <motion.button
-                key={item.id}
-                onClick={() => handleSuggestionClick(item)}
-                className="w-full px-4 py-3 text-left border-b border-cyan-500/10 hover:bg-cyan-500/10 transition-colors duration-200 last:border-b-0 group focus:outline-none"
-                whileHover={{ x: 4 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full group-hover:shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-cyan-300 font-sci-fi truncate">{item.title}</p>
-                    <p className="text-xs text-slate-400">{item.type === 'note' ? '📄 Note' : item.type === 'qb' ? '📋 Question Bank' : '📑 Paper'} • {item.subject}</p>
+            {suggestions.length > 0 ? (
+              suggestions.map((item, index) => (
+                <motion.button
+                  key={item.id}
+                  onClick={() => handleSuggestionClick(item)}
+                  className="w-full px-4 py-3 text-left border-b border-cyan-500/10 hover:bg-cyan-500/10 transition-colors duration-200 last:border-b-0 group focus:outline-none"
+                  whileHover={{ x: 4 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full group-hover:shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-cyan-300 font-sci-fi truncate">{item.title}</p>
+                      <p className="text-xs text-slate-400">{item.type === 'note' ? '📄 Note' : item.type === 'qb' ? '📋 Question Bank' : '📑 Paper'} • {item.subject}</p>
+                    </div>
                   </div>
-                </div>
-              </motion.button>
+                </motion.button>
+              ))
+            ) : (
+              <div className="px-4 py-6 text-center text-slate-400 font-sci-fi">
+                <p>No results found for "{query}"</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
             ))}
           </motion.div>
         )}
