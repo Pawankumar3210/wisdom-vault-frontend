@@ -128,24 +128,6 @@ const SearchBar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* No results message */}
-      <AnimatePresence>
-        {isOpen && query && !isLoading && suggestions.length === 0 && (
-          <motion.div
-            className="absolute top-full left-0 right-0 mt-2 px-4 py-6 bg-slate-900/95 border border-cyan-500/30 rounded-lg backdrop-blur-md text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <p className="text-slate-400 text-sm">No results found for "{query}"</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
