@@ -97,7 +97,7 @@ const SearchBar = () => {
       <AnimatePresence>
         {query.trim() !== '' && isOpen && (
           <motion.div
-            className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-cyan-500/30 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto"
+            className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-cyan-500/30 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto z-50"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

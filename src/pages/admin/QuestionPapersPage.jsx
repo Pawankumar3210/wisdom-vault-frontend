@@ -233,7 +233,7 @@ const QuestionPapersPage = ({ onLogout }) => {
           {/* Add/Edit Form */}
           {showAddForm && (
             <motion.div
-              className="mb-8 bg-slate-800/50 border border-cyan-500/30 rounded-lg p-6"
+              className="mb-8 bg-slate-800/50 border border-cyan-500/30 rounded-lg p-6 relative z-30"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
